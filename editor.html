@@ -1,89 +1,43 @@
 <!DOCTYPE html>
 <html ng-app="app">
 <head>
-<!--
-<link rel="stylesheet" href="css/joint.css" />
-<script src="js/joint.js"></script>
--->
-
-
-<link rel="stylesheet" type="text/css" href="css/joint.css"></link>
-<script type="text/javascript" src="js/joint.js" ></script>
-<script src="js/angular.min.js"></script>
-<script>
-
-</script>
-
-
+    <link rel="stylesheet" type="text/css" href="css/joint.css"></link>
+    <script type="text/javascript" src="js/joint.js" ></script>
+    <script src="js/angular.min.js"></script>
+    <script src="js/angular-resource.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/services.js"></script>
 </head>
 <title>Test</title>
-
 <body>
+
+<br>
 
     <div id="myholder"> </div>
 
-    <div ng-controller="MyController">
+    <div ng-controller="editor">
       <!-- Your name: -->
-        <button ng-click='addProcess()'>Add Process</button>
+        <button ng-click='addProcess()'>Add Step</button>      <br/>  
+        <button ng-click='addDstep()'>Add Decision Step</button><br/>
         <input type="text" ng-model="process1" placeholder="Process1">
          <input type="text" ng-model="process2" placeholder="Process2">
-        <button ng-click='joinProcess()'>Join Process</button>
+        <button ng-click='joinProcess()'>Join Process</button><br/>
          <input type="text" ng-model="rprocess" placeholder="Enter Process Number">
-        <button ng-click='removeProcess()'>Remove Process</button> 
+        <button ng-click='removeProcess()'>Remove Process</button> <br/>
          <input type="text" ng-model="textdata" placeholder="Enter Text">     
-        <button ng-click='addText()'>Add Text</button>      
+        <button ng-click='addText()'>Add Text</button>      <br/>
+        <input type="text" ng-model="rtext" placeholder="Enter Text Number">     
+        <button ng-click='removeText()'>Remove Text</button>  <br/>
+        <button ng-click='graph_to_json()'>Create Json Object</button>  <br/>
+        <button ng-click='load_graph()'>Load Graph from Json</button>  <br/>
+        <button ng-click='get_rest()'>Get element through rest</button>  <br/>
       <hr>
     </div>
+    <div id="message" />
+     <!-- $('#message').text('blank!'); -->
 
-<script>
-    angular.module('app', [])
-      .controller('MyController', ['$scope', function($scope) {
-
-        var graph = new joint.dia.Graph;
-
-        var paper = new joint.dia.Paper({
-            el: $('#myholder'),
-            width: 1500,
-            height:500,
-            model: graph
-        });
-        var rects=[];
-        var cnt = 0;
-        
-        $scope.addProcess = function() {
-                cnt+=1;
-
-                var rect = new joint.shapes.basic.Rect({
-                    position: { x: 100, y: 30 },
-                    size: { width: 100, height: 30 },
-                    attrs: { rect: { fill: 'blue' }, text: { text: 'Task' + cnt, fill: 'white' } }
-                });
-                rects.push(rect);
-                // var rect2 = rect.clone();
-                // rect2.translate(300);
-                graph.addCells([rect]);
-                // graph.addCells([rect, rect2, link]);
-        };
-        $scope.joinProcess = function() {
-            var link = new joint.dia.Link({
-                source: { id: rects[$scope.process1].id },
-                target: { id: rects[$scope.process2].id }
-            });
-            graph.addCells([link]);
-        };
-        $scope.removeProcess = function(){
-            rects[$scope.rprocess].remove();
-        };
-        $scope.addText = function(){
-            var txt = new joint.shapes.basic.Text({
-                position: {x:100,y:30},
-                size: { width:100 , height:30},
-                attrs: {text: {text: $scope.textdata }}
-            });
-            graph.addCells([txt]);
-        }
-
-      }]);
+<script>   
 </script>
 </body>
 </html>
