@@ -1,0 +1,5 @@
+[
+{"m_id": 1, "m_name": "Form", "m_description": "Your name", "m_dataType": 0, "m_sourceType": 0, "m_unit": "", "m_validation": {"m_maxLength": 64, "m_regEx": ""}},
+{"m_id": 2, "m_name": "Field", "m_description": "Your age", "m_dataType": 1, "m_sourceType": 0, "m_unit": "", "m_validation": {"m_minValue": 0, "m_maxValue": 100}},
+{"m_id": 3, "m_name": "Email", "m_description": "Total cost", "m_dataType": 1, "m_sourceType": 1, "m_calcType": 0, "m_calcScript": "CostA + CostB","m_unit": "INR", "m_validation": {"m_minValue": 0, "m_maxValue": 1000}}
+]

@@ -1,0 +1,3 @@
+[
+{"m_id": 1, "m_name": "Name", "m_description": "Your name", "m_dataType": 0, "m_sourceType": 0, "m_unit": "", "m_validation": {"m_maxLength": 64, "m_regEx": ""}}
+]

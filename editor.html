@@ -31,9 +31,20 @@
         <button ng-click='removeText()'>Remove Text</button>  <br/>
         <button ng-click='graph_to_json()'>Create Json Object</button>  <br/>
         <button ng-click='load_graph()'>Load Graph from Json</button>  <br/>
-        <button ng-click='get_rest()'>Get element through rest</button>  <br/>
+        <input type="text" ng-model="step_number" placeholder="Enter Step Number">    
+        <button ng-click='add_tasks()'>Add tasks to steps</button>  <br/>
+        <button ng-click='show_list()'>Show the list</button>  <br/>
+        <button ng-click='show_single()'>Single row with id 1</button>  <br/>
+        <h3>Query Result </h3>
+            {{result}}
+        <br/>
+        <h3>Single Query Result</h3>
+          {{result2}}
+          <br/>
+        <button ng-click='add_one()'>Add a row</button>
       <hr>
     </div>
+
     <div id="message" />
      <!-- $('#message').text('blank!'); -->
 
