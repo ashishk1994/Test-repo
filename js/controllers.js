@@ -9,6 +9,14 @@ angular.module('app.controllers', [])
         height:500,
         model: graph
     });
+    var paper2 = new joint.dia.Paper({
+        el: $('#myimage'),
+        width: 1500,
+        height:500,
+        model: graph,
+        interactive : false
+    });
+
 
     var rects=[];
     var texts=[];
@@ -223,8 +231,6 @@ angular.module('app.controllers', [])
     $scope.get_rest = function(){
         $('#message').text(AngularIssues.query());
     }
-
-
 
 }]);
 
