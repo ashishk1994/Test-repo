@@ -9,11 +9,15 @@ angular.module('app.controllers', [])
         height:500,
         model: graph
     });
+
     var rects=[];
     var texts=[];
-    var cnt = 0;
+    var cnt = 1;
     var dsteps = [];
     var dcnt = 0;
+    var parallel_inner = new Object();
+    var parallel_outer = [];
+
     var start = new joint.shapes.basic.Circle({
         position:{ x:400,y:50},
         attrs:{circle:{fill:'black'}, text : {text:'Start',fill:'white'}}
@@ -40,16 +44,18 @@ angular.module('app.controllers', [])
             }
         });
         dsteps.push(rect);
+        //paper.findViewByModel(myElement).options.interactive = false
+        //rect.options.interactive = false
         graph.addCells([rect]);
     };
 
     $scope.addProcess = function() {
-            cnt+=1;
             var rect = new joint.shapes.basic.Rect({
                 position: { x: 100, y: 30 },
                 size: { width: 100, height: 30 },
                 attrs: { rect: { fill: 'blue',rx: 15, ry: 15}, text: { text: 'Step' + cnt, fill: 'white' } }
             });
+            cnt+=1;
             rects.push(rect);
             graph.addCells([rect]);
     };
@@ -95,6 +101,7 @@ angular.module('app.controllers', [])
                     //$('#message').text(cellView.model.id);
                     if(cellView.model.id!=click_id )//&& cellView instanceof joint.shapes.basic)
                     {
+
                              graph.addCell(new joint.dia.Link({
                                 source: { id: cellView.model.id }, target: { id: click_id },
                                 attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
@@ -123,12 +130,80 @@ angular.module('app.controllers', [])
                     cellView.model.translate(-200, 0);
                 }
     }
-    
+    function add_rect(x_val,y_val){
+        var rect = new joint.shapes.basic.Rect({
+                position: { x: x_val, y: y_val },
+                size: { width: 100, height: 30 },
+                attrs: { rect: { fill: 'blue',rx: 15, ry: 15}, text: {} }
+        });
+        graph.addCells([rect]);
+    }
+
+    function outer_box(x_val,y_val,steps){
+        var rect = new joint.shapes.basic.Rect({
+                position: { x: x_val, y: y_val },
+                size: { width: steps*80, height: 50 },
+                attrs: { rect: { rx: 15, ry: 15}, text: {} }
+        });
+        graph.addCells([rect]); 
+        parallel_outer.push(rect);
+        var cur_ar = [];
+        for (var i = 0; i < steps; i++) {
+            var rect2 = new joint.shapes.basic.Rect({
+                    position: { x: x_val+50+55*i, y: y_val+10 },
+                    size: { width: 50, height: 30 },
+                    attrs: { rect: {  fill: 'blue', rx: 15, ry: 15 }, text: { text: 'Step' + cnt, fill: 'white' } }
+            });
+            rect.embed(rect2);       
+            cur_ar.push(rect2);
+            graph.addCells([rect2]);     
+            paper.findViewByModel(rect2).options.interactive = false;
+        };
+        cnt+=1;
+        parallel_inner[rect]=cur_ar;
+        //alert(parallel_outer[0].id);  
+    }
+
+    function is_child(cellView){
+            for (var i =0;i < parallel_outer.length ; i++) {
+                var cur = parallel_inner[parallel_outer[i]];
+                for (var j = 0;j < cur.length ; j++) {
+                    if(cur[j].id == cellView.model.id)
+                    {
+                        return 0;
+                        //alert('embed');
+                        //break;
+                    }
+                };
+            };
+            return 1;
+    }
+
+    $scope.add_parallel = function (){
+        var steps = $scope.parallel_steps;
+        var st_x = 100;st_y=100;
+        outer_box(st_x,st_y,steps);
+    }
+
     //We can have pointerup but that will not be optimal
     paper.on('cell:pointerclick', function(cellView, evt, x, y) {
-                onclick_join(cellView,evt,x,y);
-    });
 
+                if (is_child(cellView))
+                {
+                    onclick_join(cellView,evt,x,y);
+                }
+                else
+                {
+                    state = 0;
+                }
+    });
+    paper.on('cell:pointerup',function(cellView, evt, x, y){
+
+    });
+    paper.on('blank:pointerclick', function(evt, x, y) {
+            //If someone clicks on the black part then state will be reset  
+               state=0;
+    });
 
 
     var check;
