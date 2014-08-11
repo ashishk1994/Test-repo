@@ -25,6 +25,7 @@ angular.module('app.controllers', [])
     var dcnt = 0;
     var parallel_inner = new Object();
     var parallel_outer = [];
+    var links = [];
 
     var start = new joint.shapes.basic.Circle({
         position:{ x:400,y:50},
@@ -69,10 +70,12 @@ angular.module('app.controllers', [])
     };
     
     $scope.joinProcess = function() {
+
         var link = new joint.dia.Link({
             source: { id: rects[$scope.process1].id },
             target: { id: rects[$scope.process2].id }
         });
+        links.push([rects[$scope.process1].id,rects[$scope.process2].id]);
         graph.addCells([link]); 
     };
     
@@ -97,46 +100,62 @@ angular.module('app.controllers', [])
     var state = 0;
     var click_id;
 
-    function onclick_join(cellView,ect,x,y) {
-                 if(state==0)
+    function check_link(id1,id2){
+        var fl=0;
+        for (var i = 0; i <links.length; i++) {
+                if(links[i][0] == id1 && links[i][1] == id2)
                 {
-                    //$('#message').text(cellView.model.id);
-                    click_id=cellView.model.id;
-                    state=1;
+                    fl=1;
+                    break;
                 }
-                else
-                {
-                    //$('#message').text(cellView.model.id);
-                    if(cellView.model.id!=click_id )//&& cellView instanceof joint.shapes.basic)
-                    {
+        };
+        return fl;
+    }
 
-                             graph.addCell(new joint.dia.Link({
-                                source: { id: cellView.model.id }, target: { id: click_id },
-                                attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
-                            }));
-                    }
-                    state=0;
-                }           
+    function onclick_join(cellView,ect,x,y) {
+         if(state==0)
+        {
+            paper.$el.addClass('connecting');
+            click_id=cellView.model.id;
+            state=1;
+        }
+        else
+        {
+            if(cellView.model.id!=click_id )//&& cellView instanceof joint.shapes.basic)
+            {
+                //checking if a link already present                    
+                 if(!check_link(cellView.model.id,click_id))
+                 {
+                     graph.addCell(new joint.dia.Link({
+                        source: { id: cellView.model.id }, target: { id: click_id },
+                        attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
+                    }));
+                    links.push([cellView.model.id,click_id]);
+                }
+            }
+            paper.$el.removeClass('connecting');
+            state=0;
+        }           
     }
 
     function ondrag_join (cellView,evt,x,y) {
-              var elementBelow = graph.get('cells').find(function(cell) {
-                    if (cell instanceof joint.dia.Link) return false; // Not interested in links.
-                    if (cell.id === cellView.model.id) return false; // The same element as the dropped one.
-                    if (cell.getBBox().containsPoint(g.point(x, y))) {
-                        return true;
-                    }
-                    return false;
-                });
+        var elementBelow = graph.get('cells').find(function(cell) {
+            if (cell instanceof joint.dia.Link) return false; // Not interested in links.
+            if (cell.id === cellView.model.id) return false; // The same element as the dropped one.
+            if (cell.getBBox().containsPoint(g.point(x, y))) {
+                return true;
+            }
+            return false;
+        });
 
-                if (elementBelow && !_.contains(graph.getNeighbors(elementBelow), cellView.model)) {
-                graph.addCell(new joint.dia.Link({
-                    source: { id: cellView.model.id }, target: { id: elementBelow.id },
-                    attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
-                }));
-                    // Move the element a bit to the side.
-                    cellView.model.translate(-200, 0);
-                }
+        if (elementBelow && !_.contains(graph.getNeighbors(elementBelow), cellView.model)) {
+        graph.addCell(new joint.dia.Link({
+            source: { id: cellView.model.id }, target: { id: elementBelow.id },
+            attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
+        }));
+            // Move the element a bit to the side.
+            cellView.model.translate(-200, 0);
+        }
     }
     function add_rect(x_val,y_val){
         var rect = new joint.shapes.basic.Rect({
@@ -173,18 +192,18 @@ angular.module('app.controllers', [])
     }
 
     function is_child(cellView){
-            for (var i =0;i < parallel_outer.length ; i++) {
-                var cur = parallel_inner[parallel_outer[i]];
-                for (var j = 0;j < cur.length ; j++) {
-                    if(cur[j].id == cellView.model.id)
-                    {
-                        return 0;
-                        //alert('embed');
-                        //break;
-                    }
-                };
+        for (var i =0;i < parallel_outer.length ; i++) {
+            var cur = parallel_inner[parallel_outer[i]];
+            for (var j = 0;j < cur.length ; j++) {
+                if(cur[j].id == cellView.model.id)
+                {
+                    return 0;
+                    //alert('embed');
+                    //break;
+                }
             };
-            return 1;
+        };
+        return 1;
     }
 
     $scope.add_parallel = function (){
@@ -193,27 +212,29 @@ angular.module('app.controllers', [])
         outer_box(st_x,st_y,steps);
     }
 
+  
     //We can have pointerup but that will not be optimal
     paper.on('cell:pointerclick', function(cellView, evt, x, y) {
-
-                if (is_child(cellView))
-                {
-                    onclick_join(cellView,evt,x,y);
-                }
-                else
-                {
-                    state = 0;
-                }
+        if (is_child(cellView))
+        {
+            onclick_join(cellView,evt,x,y);
+        }
+        else//Here we can join with the parent
+        {
+            paper.$el.removeClass('connecting');
+            state = 0;
+        }
     });
     paper.on('cell:pointerup',function(cellView, evt, x, y){
 
     });
     paper.on('blank:pointerclick', function(evt, x, y) {
             //If someone clicks on the black part then state will be reset  
+               paper.$el.removeClass('connecting');
                state=0;
     });
 
-
+               
     var check;
     $scope.graph_to_json = function(){
         //Create json object for graph
