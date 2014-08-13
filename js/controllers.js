@@ -328,14 +328,18 @@ angular.module('app.controllers', [])
         //Start step should have an outgoing link
         var inboundStart = graph.getConnectedLinks(start, { inbound: true });
         var outboundEnd = graph.getConnectedLinks(end, { outbound: true });
-       alert(inboundStart.length)
+       //alert(inboundStart.length)
         if(inboundStart.length==0)
         {
             alert("No link from start");
         }
-        if(outboundEnd.length==0)
+        else if(outboundEnd.length==0)
         {
             alert("No link to end");
+        }
+        else
+        {
+            alert("No Error");
         }
       //  var stepLinks = 
         //alert(outboundLinks);
