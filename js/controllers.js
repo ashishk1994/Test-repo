@@ -21,10 +21,10 @@ angular.module('app.controllers', [])
     var rects=new Object();
     var texts=[];
     var cnt = 1;
-    var dsteps = [];
+    var dsteps =new Object();
     var dcnt = 0;
     var parallel_inner = new Object();
-    var parallel_outer = [];
+    var parallel_outer = new Object;
     var links = [];
 
     var start = new joint.shapes.basic.Circle({
@@ -79,7 +79,7 @@ angular.module('app.controllers', [])
                 }
             }
         });
-        dsteps.push(rect);
+        dsteps[rect.id]=1;
         graph.addCells([rect]);
     };
     $scope.addProcess = function(){
@@ -143,36 +143,19 @@ angular.module('app.controllers', [])
                 break;
             }
         };
-
         return fl;
-    }
-    function check_in(cell){
-            var incoming = graph.getConnectedLinks(cell, { inbound: true });
-            if(incoming.length==0)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
-    }
-    function check_out(cell){
-            var outgoing = graph.getConnectedLinks(cell, { outbound: true });        
-            if(outgoing.length==0)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
     }
     function onclick_join(cellView,ect,x,y) {
          if(state==0)
         {
             if(cellView.model.id!=StepImage.id && cellView.model.id!=DStepImage.id && cellView.model.id!=DeleteImage.id)
             {
+                cellView.model.attr({
+                    rect:{fill:'#E67E22'},
+                    circle:{fill:'#E67E22'},
+                    path:{fill:'#E67E22'},
+                    text: { fill: 'white', 'font-size': 15 }
+                });
                 paper.$el.addClass('connecting');
                 click_id=cellView.model;
                 state=1;
@@ -183,61 +166,112 @@ angular.module('app.controllers', [])
             if(cellView.model.id==DeleteImage.id && click_id.id!=start.id && click_id.id!=end.id)
             {
                 click_id.remove();
+                dsteps[click_id.id]=0;
+                parallel_outer[click_id.id]=0;
+                rects[click_id.id]=0;
             }
             if(cellView.model.id!=click_id.id)//&& cellView instanceof joint.shapes.basic)
             {
-                //checking if a link already present                    
-                 if(check_link(cellView.model.id,click_id.id) && (cellView.model.id!=StepImage.id && cellView.model.id!=DStepImage.id && cellView.model.id!=DeleteImage.id))
+                //checking if a link already present 
+                 var dec = 0;
+                 if(dsteps[cellView.model.id])
                  {
-                    if(rects[cellView.model.id] && rects[click_id.id])
+                    var incoming = graph.getConnectedLinks(cellView.model, { outbound: true });        
+                    if(incoming.length==1)
                     {
-                        if((check_in(click_id) && check_out(cellView.model)))
-                        {
-                             
-                            var ln = new joint.dia.Link({
-                                source: { id: cellView.model.id }, target: { id: click_id.id },
-                                attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
-                            });
-                            links.push([ln.id,cellView.model.id,click_id.id]);
-                            graph.addCell([ln]);
-                        }
+                        dec=1;
                     }
-                    else if(rects[cellView.model.id] && !rects[click_id.id])
+                 }
+                 if (dsteps[click_id.id])
+                 {
+                    var outgoing = graph.getConnectedLinks(click_id, { inbound: true });        
+                    if(outgoing.length==2)
                     {
-                        if((check_out(cellView.model)))
-                        {
-                             
-                            var ln = new joint.dia.Link({
-                                source: { id: cellView.model.id }, target: { id: click_id.id },
-                                attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
-                            });
-                            links.push([ln.id,cellView.model.id,click_id.id]);
-                            graph.addCell([ln]);
-                        }
+                        dec = 1;
                     }
-                    else if(!rects[cellView.model.id] && rects[click_id.id])
+                 }
+                 if(parallel_outer[cellView.model.id])
+                 {
+                    var incoming = graph.getConnectedLinks(cellView.model, { outbound: true });        
+                    if(incoming.length==1)
                     {
-                        if((check_in(click_id)))
-                        {
-                             
-                            var ln = new joint.dia.Link({
-                                source: { id: cellView.model.id }, target: { id: click_id.id },
-                                attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
-                            });
-                            links.push([ln.id,cellView.model.id,click_id.id]);
-                            graph.addCell([ln]);
-                        }
+                        dec=1;
                     }
-                    else
+                 }
+                 if (parallel_outer[click_id.id])
+                 {
+                    var outgoing = graph.getConnectedLinks(click_id, { inbound: true });        
+                    if(outgoing.length==1)
                     {
-                            var ln = new joint.dia.Link({
-                                source: { id: cellView.model.id }, target: { id: click_id.id },
-                                attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
-                            });
-                            links.push([ln.id,cellView.model.id,click_id.id]);
-                            graph.addCell([ln]);                       
+                        dec = 1;
                     }
+                 }
+                 if(rects[cellView.model.id])
+                 {
+                    var incoming = graph.getConnectedLinks(cellView.model, { outbound: true });        
+                    if(incoming.length==1)
+                    {
+                        dec=1;
+                    }
+                 }
+                 if (rects[click_id.id])
+                 {
+                    var outgoing = graph.getConnectedLinks(click_id, { inbound: true });        
+                    if(outgoing.length==1)
+                    {
+                        dec = 1;
+                    }
+                 }
+                 if(cellView.model.id==start.id || dec == 1)
+                 {
+                    paper.$el.removeClass('connecting');
+                    state=0;
+                 }
+                 else if(check_link(cellView.model.id,click_id.id) && (cellView.model.id!=StepImage.id && cellView.model.id!=DStepImage.id && cellView.model.id!=DeleteImage.id))
+                 {                    
+                    var ln = new joint.dia.Link({
+                        source: { id: cellView.model.id }, target: { id: click_id.id },
+                        attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
+                    });
+                    links.push([ln.id,cellView.model.id,click_id.id]);
+                    graph.addCell([ln]);
                 }
+            }
+            if(parallel_outer[cellView.model.id])
+            {
+                cellView.model.attr({
+                    rect:{fill:'white'},
+                    circle:{fill:'black'},
+                    path:{fill:'green'},
+                    text: { fill: 'white', 'font-size': 15 }
+                });   
+            }
+            else
+            {
+                cellView.model.attr({
+                 rect:{fill:'blue'},
+                 circle:{fill:'black'},
+                 path:{fill:'green'},
+                 text: { fill: 'white', 'font-size': 15 }
+                });          
+            }
+            if(parallel_outer[click_id.id])
+            {
+                click_id.attr({
+                    rect:{fill:'white'},
+                    circle:{fill:'black'},
+                    path:{fill:'green'},
+                    text: { fill: 'white', 'font-size': 15 }
+                });   
+            }
+            else
+            {
+                click_id.attr({
+                 rect:{fill:'blue'},
+                 circle:{fill:'black'},
+                 path:{fill:'green'},
+                 text: { fill: 'white', 'font-size': 15 }
+                }); 
             }
             paper.$el.removeClass('connecting');
             state=0;
@@ -279,8 +313,8 @@ angular.module('app.controllers', [])
                 attrs: { rect: { rx: 15, ry: 15}, text: {} }
         });
         graph.addCells([rect]); 
-        parallel_outer.push(rect);
-        var cur_ar = [];
+        parallel_outer[rect.id]=1;
+
         for (var i = 0; i < steps; i++) {
             var rect2 = new joint.shapes.basic.Rect({
                     position: { x: x_val+55*i, y: y_val+40 },
@@ -288,25 +322,26 @@ angular.module('app.controllers', [])
                     attrs: { rect: {  fill: 'blue', rx: 15, ry: 15 }, text: { text: 'Step' + cnt, fill: 'white' } }
             });
             rect.embed(rect2);       
-            cur_ar.push(rect2);
             graph.addCells([rect2]);     
             paper.findViewByModel(rect2).options.interactive = false;
         };
         cnt+=1;
-        parallel_inner[rect]=cur_ar;
-
-        //alert(parallel_outer[0].id);  
     }
 
     function is_child(cellView){
-        for (var i =0;i < parallel_outer.length ; i++) {
-            var cur = parallel_inner[parallel_outer[i]];
-            for (var j = 0;j < cur.length ; j++) {
-                if(cur[j].id == cellView.model.id)
+        var all = graph.getElements();
+        for (var i =0;i < all.length ; i++) {
+            if(parallel_outer[all[i].id]==1)
+            {
+                var emb = (all[i].get('embeds'));
+                for(var j=0 ;j<emb.length ;j++ )
                 {
-                    return 0;
+                    if(cellView.model.id==emb[j])
+                    {
+                        return 0;
+                    }
                 }
-            };
+            }
         };
         return 1;
     }
@@ -328,6 +363,7 @@ angular.module('app.controllers', [])
         //Start step should have an outgoing link
         var inboundStart = graph.getConnectedLinks(start, { inbound: true });
         var outboundEnd = graph.getConnectedLinks(end, { outbound: true });
+
        //alert(inboundStart.length)
         if(inboundStart.length==0)
         {
@@ -341,18 +377,13 @@ angular.module('app.controllers', [])
         {
             alert("No Error");
         }
-      //  var stepLinks = 
-        //alert(outboundLinks);
-        /*paper.findViewByModel(start).options.inbound=true;
-        alert(graph.getConnectedLinks(start));*/
-        //Stop step should have an incoming link
-        //Every normal step should have 
-
     }
     //We can have pointerup but that will not be optimal
     paper.on('cell:pointerclick', function(cellView, evt, x, y) {
+        //alert(is_child(cellView));
         if (is_child(cellView))
         {
+
             onclick_join(cellView,evt,x,y);
         }
         else//Here we can join with the parent
