@@ -44,10 +44,10 @@ angular.module('app.controllers', [])
         attrs: { rect: { fill: 'blue'}, text: { text: 'Step',fill:'white' } }
     });
     var DStepImage = new joint.shapes.basic.Path({
-            size: { width: 50, height: 50 },
+            size: { width: 70, height: 70 },
             position: { x: 840, y: 10 },
             attrs: {
-                path: { d: 'M 30 0 L 60 30 30 60 0 30 z' ,fill : 'green'},
+                path: { d: 'M 30 0 L 60 30 30 60 0 30 z' ,fill : '#9FA4EB'},
                 text: {
                     text: 'D',
                     'ref-y': .5 // basic.Path text is originally positioned under the element
@@ -55,7 +55,7 @@ angular.module('app.controllers', [])
             }
     });
     var DeleteImage = new joint.shapes.basic.Rect({
-        position: { x: 900, y: 10 },
+        position: { x: 950, y: 10 },
         size: { width: 100, height: 30 },
 
         attrs: { rect: { fill: 'blue'}, text: { text: 'Delete',fill:'white' } }
@@ -70,9 +70,9 @@ angular.module('app.controllers', [])
     function addDstep() {
         dcnt+=1;
         var rect = new joint.shapes.basic.Path({
-            size: { width: 50, height: 50 },
+            size: { width: 70, height: 70 },
             attrs: {
-                path: { d: 'M 30 0 L 60 30 30 60 0 30 z' ,fill : 'green'},
+                path: { d: 'M 30 0 L 60 30 30 60 0 30 z' ,fill : '#9FA4EB'},
                 text: {
                     text: 'D' + dcnt,
                     'ref-y': .5 // basic.Path text is originally positioned under the element
@@ -144,6 +144,30 @@ angular.module('app.controllers', [])
             }
         };
         return fl;
+    }
+    function setColor(par,cell){
+            if(par)
+            {
+                cell.attr({
+                    rect:{fill:'white'},
+                    circle:{fill:'black'},
+                    path:{fill:'#9FA4EB'},
+                    text: { fill: 'white', 'font-size': 15 }
+                });   
+            }
+            else
+            {
+                cell.attr({
+                 rect:{fill:'blue'},
+                 circle:{fill:'black'},
+                 path:{fill:'#9FA4EB'},
+                 text: { fill: 'white', 'font-size': 15 }
+                });          
+            }  
+    }
+    function check_cond()
+    {
+
     }
     function onclick_join(cellView,ect,x,y) {
          if(state==0)
@@ -236,42 +260,22 @@ angular.module('app.controllers', [])
                     links.push([ln.id,cellView.model.id,click_id.id]);
                     graph.addCell([ln]);
                 }
-            }
-            if(parallel_outer[cellView.model.id])
-            {
-                cellView.model.attr({
-                    rect:{fill:'white'},
-                    circle:{fill:'black'},
-                    path:{fill:'green'},
-                    text: { fill: 'white', 'font-size': 15 }
-                });   
-            }
-            else
-            {
-                cellView.model.attr({
-                 rect:{fill:'blue'},
-                 circle:{fill:'black'},
-                 path:{fill:'green'},
-                 text: { fill: 'white', 'font-size': 15 }
-                });          
-            }
-            if(parallel_outer[click_id.id])
-            {
-                click_id.attr({
-                    rect:{fill:'white'},
-                    circle:{fill:'black'},
-                    path:{fill:'green'},
-                    text: { fill: 'white', 'font-size': 15 }
-                });   
-            }
-            else
-            {
-                click_id.attr({
-                 rect:{fill:'blue'},
-                 circle:{fill:'black'},
-                 path:{fill:'green'},
-                 text: { fill: 'white', 'font-size': 15 }
-                }); 
+                if(parallel_outer[click_id.id])
+                {
+                    setColor(1,click_id);
+                }
+                else
+                {
+                    setColor(0,click_id);
+                }
+                if(parallel_outer[cellView.model.id])
+                {
+                    setColor(1,cellView.model);
+                }
+                else
+                {
+                    setColor(0,cellView.model);
+                }
             }
             paper.$el.removeClass('connecting');
             state=0;
@@ -363,9 +367,48 @@ angular.module('app.controllers', [])
         //Start step should have an outgoing link
         var inboundStart = graph.getConnectedLinks(start, { inbound: true });
         var outboundEnd = graph.getConnectedLinks(end, { outbound: true });
-
-       //alert(inboundStart.length)
-        if(inboundStart.length==0)
+        var all_el = graph.getElements();
+        var flag=0;
+        for (var i = 0; i <all_el.length; i++) {
+                if(rects[all_el[i].id])
+                {
+                    var incoming = graph.getConnectedLinks(all_el[i], { outbound: true });        
+                    var outgoing = graph.getConnectedLinks(all_el[i], { inbound: true });        
+                    if(!(incoming.length==1 && outgoing.length==1))
+                    {
+                        flag=1;
+                        alert("Error from normal step!!!");
+                        break;
+                    }
+                }
+                else if(parallel_outer[all_el[i].id])
+                {
+                    var incoming = graph.getConnectedLinks(all_el[i], { outbound: true });        
+                    var outgoing = graph.getConnectedLinks(all_el[i], { inbound: true });        
+                    if(!(incoming.length==1 && outgoing.length==1))
+                    {
+                        flag=1;
+                        alert("Error from parallel step!!!");
+                        break;
+                    }
+                }
+                else if(dsteps[all_el[i].id])
+                {
+                    var incoming = graph.getConnectedLinks(all_el[i], { outbound: true });        
+                    var outgoing = graph.getConnectedLinks(all_el[i], { inbound: true });        
+                    if(!(incoming.length==1 && outgoing.length==2))
+                    {
+                        flag=1;
+                        alert("Error from decision step!!!");
+                        break;
+                    }
+                }
+        };
+        if(flag==1)
+        {
+ 
+        }
+        else if(inboundStart.length==0)
         {
             alert("No link from start");
         }
@@ -403,7 +446,18 @@ angular.module('app.controllers', [])
         }
     });
     paper.on('blank:pointerclick', function(evt, x, y) {
-            //If someone clicks on the black part then state will be reset  
+            //If someone clicks on the black part then state will be reset 
+               all_el = graph.getElements();
+               for (var i = 0; i <all_el.length; i++) {
+                    if (parallel_outer[all_el[i].id]) 
+                    {
+                        setColor(1,all_el[i]);
+                    }
+                    else
+                    {
+                        setColor(0,all_el[i]);
+                    }
+                }; 
                paper.$el.removeClass('connecting');
                state=0;
     });
