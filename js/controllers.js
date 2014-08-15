@@ -17,7 +17,7 @@ angular.module('app.controllers', [])
         interactive : false
     });
 
-
+    var rect_w=100,rect_h=30;
     var rects=new Object();
     var texts=[];
     var cnt = 1;
@@ -26,6 +26,7 @@ angular.module('app.controllers', [])
     var parallel_inner = new Object();
     var parallel_outer = new Object;
     var links = [];
+    var vert = new Object();
 
     var start = new joint.shapes.basic.Circle({
         position:{ x:400,y:50},
@@ -91,7 +92,7 @@ angular.module('app.controllers', [])
     function addProcess() {
             var rect = new joint.shapes.basic.Rect({
                 position: { x: 100, y: 30 },
-                size: { width: 100, height: 30 },
+                size: { width: rect_w, height:rect_h },
                 attrs: { rect: { fill: 'blue',rx: 15, ry: 15}, text: { text: 'Step' + cnt, fill: 'white' } }
             });
             cnt+=1;
@@ -126,7 +127,8 @@ angular.module('app.controllers', [])
 
     var state = 0;
     var click_id;
-
+    var pos_x;
+    var pos_y;
     function check_link(id1,id2){
         var fl=1;
         var allLinks=graph.getLinks();
@@ -165,42 +167,44 @@ angular.module('app.controllers', [])
                 });          
             }  
     }
-    function check_cond()
-    {
 
-    }
     function onclick_join(cellView,ect,x,y) {
+        //alert(state);
          if(state==0)
         {
-            if(cellView.model.id!=StepImage.id && cellView.model.id!=DStepImage.id && cellView.model.id!=DeleteImage.id)
+            if(cellView.id!=StepImage.id && cellView.id!=DStepImage.id && cellView.id!=DeleteImage.id)
             {
-                cellView.model.attr({
+                //alert("Initial");
+                cellView.attr({
                     rect:{fill:'#E67E22'},
                     circle:{fill:'#E67E22'},
                     path:{fill:'#E67E22'},
                     text: { fill: 'white', 'font-size': 15 }
                 });
                 paper.$el.addClass('connecting');
-                click_id=cellView.model;
+                click_id=cellView;
+                pos_x=x;
+                pos_y=y;
                 state=1;
             }
         }
         else
         {
-            if(cellView.model.id==DeleteImage.id && click_id.id!=start.id && click_id.id!=end.id)
+            if(cellView.id==DeleteImage.id && click_id.id!=start.id && click_id.id!=end.id)
             {
                 click_id.remove();
                 dsteps[click_id.id]=0;
                 parallel_outer[click_id.id]=0;
                 rects[click_id.id]=0;
             }
-            if(cellView.model.id!=click_id.id)//&& cellView instanceof joint.shapes.basic)
+            if(cellView.id!=click_id.id)//&& cellView instanceof joint.shapes.basic)
             {
                 //checking if a link already present 
                  var dec = 0;
-                 if(dsteps[cellView.model.id])
+                 //alert(parallel_outer[cellView.id]);
+                 if(dsteps[cellView.id])
                  {
-                    var incoming = graph.getConnectedLinks(cellView.model, { outbound: true });        
+                    var incoming = graph.getConnectedLinks(cellView, { outbound: true });        
                     if(incoming.length==1)
                     {
                         dec=1;
@@ -214,9 +218,9 @@ angular.module('app.controllers', [])
                         dec = 1;
                     }
                  }
-                 if(parallel_outer[cellView.model.id])
+                 if(parallel_outer[cellView.id])
                  {
-                    var incoming = graph.getConnectedLinks(cellView.model, { outbound: true });        
+                    var incoming = graph.getConnectedLinks(cellView, { outbound: true });        
                     if(incoming.length==1)
                     {
                         dec=1;
@@ -230,9 +234,9 @@ angular.module('app.controllers', [])
                         dec = 1;
                     }
                  }
-                 if(rects[cellView.model.id])
+                 if(rects[cellView.id])
                  {
-                    var incoming = graph.getConnectedLinks(cellView.model, { outbound: true });        
+                    var incoming = graph.getConnectedLinks(cellView, { outbound: true });        
                     if(incoming.length==1)
                     {
                         dec=1;
@@ -246,20 +250,28 @@ angular.module('app.controllers', [])
                         dec = 1;
                     }
                  }
-                 if(cellView.model.id==start.id || dec == 1)
+                 if(dec==1 || cellView.id==start.id)
+                 {
+
+                 }
+                 /*if(cellView.id==start.id || dec == 1)
                  {
                     paper.$el.removeClass('connecting');
                     state=0;
-                 }
-                 else if(check_link(cellView.model.id,click_id.id) && (cellView.model.id!=StepImage.id && cellView.model.id!=DStepImage.id && cellView.model.id!=DeleteImage.id))
+                 }*/
+                 else if(check_link(cellView.id,click_id.id) && (cellView.id!=StepImage.id &&cellView.id!=DStepImage.id && cellView.id!=DeleteImage.id))
                  {                    
                     var ln = new joint.dia.Link({
-                        source: { id: cellView.model.id }, target: { id: click_id.id },
+                        source: { id: cellView.id }, target: { id: click_id.id },
                         attrs: { '.marker-source': { d: 'M 10 0 L 0 5 L 10 10 z' } }
                     });
-                    links.push([ln.id,cellView.model.id,click_id.id]);
+                    links.push([ln.id,cellView.id,click_id.id]);
                     graph.addCell([ln]);
                 }
+            }
+            if(cellView.id!=StepImage.id)
+            {
+                //alert("Initial");
                 if(parallel_outer[click_id.id])
                 {
                     setColor(1,click_id);
@@ -268,17 +280,17 @@ angular.module('app.controllers', [])
                 {
                     setColor(0,click_id);
                 }
-                if(parallel_outer[cellView.model.id])
+                if(parallel_outer[cellView.id])
                 {
-                    setColor(1,cellView.model);
+                    setColor(1,cellView);
                 }
                 else
                 {
-                    setColor(0,cellView.model);
+                    setColor(0,cellView);
                 }
+                paper.$el.removeClass('connecting');
+                state=0;
             }
-            paper.$el.removeClass('connecting');
-            state=0;
         }           
     }
 
@@ -309,29 +321,72 @@ angular.module('app.controllers', [])
         });
         graph.addCells([rect]);
     }
+    //$scope.draw_line =function  (){
+    function draw_line(cell,x,y){
+        var mo=graph.findModelsFromPoint(g.point(x,y));
+        var all_el = graph.getElements();
+       // alert('asdf');
+        for (var i = 0; i < all_el.length; i++) {
+            if(parallel_outer[all_el[i].id])
+            {
+                var emb = (all_el[i].get('embeds'));
+                //alert(emb.length);
+                var cnt=0;
+                for (var j = 0; j <emb.length ;  j++) {
+                    if(!vert[emb[j]] && mo[0].id==emb[j])
+                    {
+                        var cl=graph.getCell(emb[j]);
+                        return cl;
+                        //setColor(0,cl);
+                        //cl.toFront();
+                        //cnt++;
+                    }
+                };
+//                alert(cnt);
+            }
+        };
+        return 0;
+    }
 
+    var out_h,out_w;
     function outer_box(x_val,y_val,steps){
+        out_h=8*rect_h;
+        out_w = (parseInt(steps))*rect_w;
+        //alert(parseInt(steps)+2);
         var rect = new joint.shapes.basic.Rect({
                 position: { x: x_val, y: y_val },
-                size: { width: steps*55, height: 100 },
-                attrs: { rect: { rx: 15, ry: 15}, text: {} }
+                size: { width: out_w, height: out_h },
+                // attrs: { rect: { rx: 15, ry: 15}, text: {} }
         });
         graph.addCells([rect]); 
         parallel_outer[rect.id]=1;
-
-        for (var i = 0; i < steps; i++) {
+ 
+        for (var i = 0; i < (parseInt(steps)); i++) {
+            /*xi=parseInt(x_val)+parseInt(rect_w)*parseInt(i);
+            yi=y_val;
+            hj=parseInt(out_h);*/
             var rect2 = new joint.shapes.basic.Rect({
-                    position: { x: x_val+55*i, y: y_val+40 },
-                    size: { width: 50, height: 30 },
-                    attrs: { rect: {  fill: 'blue', rx: 15, ry: 15 }, text: { text: 'Step' + cnt, fill: 'white' } }
+                position: { x: parseInt(x_val)+parseInt(i)*parseInt(rect_w), y: y_val },
+                size: { width: rect_w, height: out_h },
+                attrs: { rect2: { fill: 'blue'}, text: {  } }
             });
-            rect.embed(rect2);       
-            graph.addCells([rect2]);     
-            paper.findViewByModel(rect2).options.interactive = false;
+            var ln = new joint.shapes.basic.Rect({
+                position: { x: parseInt(x_val)+parseInt(i)*parseInt(rect_w), y: y_val },
+                size: { width: 1, height: out_h },
+                attrs: { ln : { fill: 'blue'}, text: {} }
+            });
+            //cnt+=1;
+            rect.embed(rect2);
+            rect.embed(ln);    
+            graph.addCells([rect2,ln]);
+            vert[ln.id]=1;
+            parallel_inner[rect2.id]=1;
+            rect2.toBack();    
+            paper.findViewByModel(rect2).options.interactive = false; 
+            paper.findViewByModel(ln).options.interactive = false; 
         };
-        cnt+=1;
+        //cnt+=1;
     }
-
     function is_child(cellView){
         var all = graph.getElements();
         for (var i =0;i < all.length ; i++) {
@@ -408,9 +463,9 @@ angular.module('app.controllers', [])
         {
  
         }
-        else if(inboundStart.length==0)
+        else if(inboundStart.length!=1)
         {
-            alert("No link from start");
+            alert("Error from start");
         }
         else if(outboundEnd.length==0)
         {
@@ -423,11 +478,24 @@ angular.module('app.controllers', [])
     }
     //We can have pointerup but that will not be optimal
     paper.on('cell:pointerclick', function(cellView, evt, x, y) {
-        //alert(is_child(cellView));
-        if (is_child(cellView))
-        {
 
-            onclick_join(cellView,evt,x,y);
+        var mo=graph.findModelsFromPoint(g.point(x,y));
+        var ret;
+        //alert(cellView.model.get('position').x);
+        if(mo.length>1)
+        {
+            ret=mo[mo.length-1];        
+        }
+        else
+        {
+            ret=cellView.model;
+        }
+        if (ret)
+        {
+            if(!vert[ret.id])
+            {
+                onclick_join(ret,evt,x,y);
+            }
         }
         else//Here we can join with the parent
         {
@@ -436,17 +504,86 @@ angular.module('app.controllers', [])
         }
     });
     paper.on('cell:pointerup',function(cellView, evt, x, y){
+      
         if(cellView.model.id == StepImage.id)
         {
-            addProcess();
+            //alert(state);
+            if(state==1)
+            {
+                var mo=graph.findModelsFromPoint(g.point(pos_x,pos_y));
+                //alert(mo.length);
+                if(mo.length>1)
+                {
+                    var dmo = mo[0].get('embeds');
+                    var mul = parseInt(2*rect_h)+parseInt(mo[0].get('position').y);
+                    if(dmo)
+                    {
+                    //alert(dmo.length);
+                        var ldmo;
+                        if(dmo.length==1)
+                        {
+                            ldmo=2;
+                        }
+                        else{
+                            ldmo=dmo.length+1;
+                        }
+                        mul=((parseInt(2*rect_h)*parseInt(ldmo))+parseInt(mo[0].get('position').y));
+                    }
+                    if(mul>(parseInt(6*rect_h)+parseInt(mo[0].get('position').y)))
+                    {
+                        var rect = new joint.shapes.basic.Rect({
+                            position: { x: mo[0].get('position').x, y: 1600},
+                            size: { width: 40, height: 10 },
+                            attrs: { rect: { fill: 'blue',rx: 15, ry: 15}, text: {} }
+                        });
+                    }
+                    else
+                    {
+                        var rect = new joint.shapes.basic.Rect({
+                            position: { x: mo[0].get('position').x, y: mul},
+                            size: { width: 100, height: 30 },
+                            attrs: { rect: { fill: 'blue',rx: 15, ry: 15}, text: {text: 'Step' + cnt, fill: 'white'} }
+                        });
+                        cnt+=1;
+                    }
+                    mo[0].embed(rect);
+                    graph.addCells([rect]);
+                    rect.toFront();
+                    paper.findViewByModel(rect).options.interactive = false;
+                    paper.$el.removeClass('connecting');
+                    state=0;
+                    all_el = graph.getElements();
+                    for (var i = 0; i <all_el.length; i++) {
+                        if (parallel_outer[all_el[i].id]) 
+                        {
+                            setColor(1,all_el[i]);
+                        }
+                        else
+                        {
+                            setColor(0,all_el[i]);
+                        }
+                    }; 
+                }
+                else
+                {
+                    addProcess();
+                }
+                
+            }
+            else
+            {
+                addProcess();
+            }   
         }
         if(cellView.model.id == DStepImage.id)
         {
             addDstep();
         }
+        //state=0;
     });
     paper.on('blank:pointerclick', function(evt, x, y) {
             //If someone clicks on the black part then state will be reset 
+            //alert("blank");
                all_el = graph.getElements();
                for (var i = 0; i <all_el.length; i++) {
                     if (parallel_outer[all_el[i].id]) 
